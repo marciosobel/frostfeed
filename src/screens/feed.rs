@@ -4,8 +4,8 @@ use iced::{
     font::{self, Weight},
     time::milliseconds,
     widget::{
-        button, center, center_x, column, image, markdown, operation::AbsoluteOffset, row,
-        scrollable, sensor, space, text, text_input, Id,
+        button, center, center_x, column, container, image, markdown, operation::AbsoluteOffset,
+        row, scrollable, sensor, space, text, text_input, Id,
     },
     Alignment, Element, Font, Function, Length, Task,
 };
@@ -228,8 +228,10 @@ impl FocusedItem {
         let content;
         match &item.description {
             Some(t) => {
-                let read = html2text::from_read(t.as_bytes(), 999).unwrap();
-                content = read.replace("  ", " ").trim().to_string();
+                content = match html_to_markdown_rs::convert(t, None) {
+                    Ok(md) => md,
+                    Err(_) => "Unable to parse content".to_string(),
+                };
             }
             None => content = "Unable to get content".to_string(),
         };
@@ -261,7 +263,7 @@ impl<'a> markdown::Viewer<'a, Message> for FocusedItem {
         _alt: &markdown::Text,
     ) -> Element<'a, Message> {
         if let Some(Image::Ready(handle)) = &self.images.get(url) {
-            center_x(image(handle)).into()
+            center_x(container(image(handle)).max_width(600.0)).into()
         } else {
             sensor(text("Loading"))
                 .key_ref(url.as_str())

@@ -80,6 +80,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "allocator-api2"
+version = "0.2.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "683d7910e743518b0e34f1186f92494becacb047c7b6bf616c96772180fef923"
+
+[[package]]
 name = "ammonia"
 version = "4.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -194,6 +200,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0bb44936d800fea8f016d7f2311c6a4f97aebd5dc86f09906139ec848cf3a46f"
 dependencies = [
  "libloading",
+]
+
+[[package]]
+name = "astral-tl"
+version = "0.7.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d90933ffb0f97e2fc2e0de21da9d3f20597b804012d199843a6fe7c2810d28f3"
+dependencies = [
+ "memchr",
 ]
 
 [[package]]
@@ -1373,12 +1388,11 @@ name = "frostfeed"
 version = "0.1.0"
 dependencies = [
  "feed-rs",
- "html2text",
+ "html-to-markdown-rs",
  "iced",
  "lucide-icons",
  "open",
  "reqwest",
- "serde",
 ]
 
 [[package]]
@@ -1657,9 +1671,9 @@ dependencies = [
 
 [[package]]
 name = "h2"
-version = "0.4.12"
+version = "0.4.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3c0b69cfcb4e1b9f1bf2f53f95f766e4661169728ec61cd3fe5a0166f2d1386"
+checksum = "2f44da3a8150a6703ed5d34e164b875fd14c2cdab9af1252a9a1020bde2bdc54"
 dependencies = [
  "atomic-waker",
  "bytes",
@@ -1714,6 +1728,8 @@ version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "841d1cc9bed7f9236f321df977030373f4a4163ae1a7dbfe1a51a2c1a51d9100"
 dependencies = [
+ "allocator-api2",
+ "equivalent",
  "foldhash 0.2.0",
 ]
 
@@ -1736,15 +1752,31 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dfa686283ad6dd069f105e5ab091b04c62850d3e4cf5d67debad1933f55023df"
 
 [[package]]
-name = "html2text"
-version = "0.16.5"
+name = "html-escape"
+version = "0.2.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "89f3074c1e4a7c4b4f7aca411a610e0f2f27e16d571d0e584524b66c93204100"
+checksum = "6d1ad449764d627e22bfd7cd5e8868264fc9236e07c752972b4080cd351cb476"
 dependencies = [
+ "utf8-width",
+]
+
+[[package]]
+name = "html-to-markdown-rs"
+version = "2.19.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d44754e19c7ed6a8d9ec82a421544ae2993f6d6599fa6f89bad560fc6a6e70c"
+dependencies = [
+ "astral-tl",
+ "base64",
+ "html-escape",
  "html5ever 0.36.1",
- "tendril",
+ "lru",
+ "markup5ever_rcdom",
+ "once_cell",
+ "regex",
+ "serde",
+ "serde_json",
  "thiserror 2.0.17",
- "unicode-width",
 ]
 
 [[package]]
@@ -2524,6 +2556,9 @@ name = "lru"
 version = "0.16.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "96051b46fc183dc9cd4a223960ef37b9af631b55191852a8274bfef064cda20f"
+dependencies = [
+ "hashbrown 0.16.1",
+]
 
 [[package]]
 name = "lru-slab"
@@ -2581,6 +2616,18 @@ dependencies = [
  "log",
  "tendril",
  "web_atoms 0.2.0",
+]
+
+[[package]]
+name = "markup5ever_rcdom"
+version = "0.36.0+unofficial"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3e5fc8802e8797c0dfdd2ce5c21aa0aee21abbc7b3b18559100651b3352a7b63"
+dependencies = [
+ "html5ever 0.36.1",
+ "markup5ever 0.36.1",
+ "tendril",
+ "xml5ever",
 ]
 
 [[package]]
@@ -4066,9 +4113,9 @@ dependencies = [
 
 [[package]]
 name = "rustls"
-version = "0.23.35"
+version = "0.23.36"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "533f54bc6a7d4f647e46ad909549eda97bf5afc1585190ef692b4286b198bd8f"
+checksum = "c665f33d38cea657d9614f766881e4d510e0eda4239891eea56b4cadcf01801b"
 dependencies = [
  "aws-lc-rs",
  "once_cell",
@@ -4839,9 +4886,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-util"
-version = "0.7.17"
+version = "0.7.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2efa149fe76073d6e8fd97ef4f4eca7b67f599660115591483572e406e165594"
+checksum = "9ae9cec805b01e8fc3fd2fe289f89149a9b66dd16786abd8b19cfa7b48cb0098"
 dependencies = [
  "bytes",
  "futures-core",
@@ -5059,6 +5106,12 @@ name = "utf-8"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09cc8ee72d2a9becf2f2febe0205bbed8fc6615b7cb429ad062dc7b7ddd036a9"
+
+[[package]]
+name = "utf8-width"
+version = "0.1.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1292c0d970b54115d14f2492fe0170adf21d68a1de108eebc51c1df4f346a091"
 
 [[package]]
 name = "utf8_iter"
@@ -6150,6 +6203,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3ae8337f8a065cfc972643663ea4279e04e7256de865aa66fe25cec5fb912d3f"
 
 [[package]]
+name = "xml5ever"
+version = "0.36.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f57dd51b88a4b9f99f9b55b136abb86210629d61c48117ddb87f567e51e66be7"
+dependencies = [
+ "log",
+ "markup5ever 0.36.1",
+]
+
+[[package]]
 name = "y4m"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6333,9 +6396,9 @@ dependencies = [
 
 [[package]]
 name = "zmij"
-version = "1.0.9"
+version = "1.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ee2a72b10d087f75fb2e1c2c7343e308fe6970527c22a41caf8372e165ff5c1"
+checksum = "dcb2c125bd7365735bebeb420ccb880265ed2d2bddcbcd49f597fdfe6bd5e577"
 
 [[package]]
 name = "zune-core"
