@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+use chrono::{DateTime, Utc};
 use feed_rs::{model, parser};
 
 const DEFAULT_USER_AGENT: &str =  "Mozilla/5.0 (compatible; FrostFeed/1.0; +https://github.com/marciosobel/frostfeed)";
@@ -16,11 +17,8 @@ pub struct Feed {
 pub struct FeedItem {
     pub title: String,
     pub url: Option<String>,
-    pub description: Option<String>
-}
-
-pub async fn fetch_rss(url: String) -> Feed {
-    Feed::from_url(url).await
+    pub description: Option<String>,
+    pub publish_date: Option<DateTime<Utc>>,
 }
 
 impl Feed {
@@ -93,7 +91,6 @@ impl Feed {
 
 impl FeedItem {
     fn from_entry(entry: model::Entry) -> Self {
-        dbg!("{:?}", &entry);
         let title=entry
                 .title
                 .as_ref()
@@ -115,6 +112,7 @@ impl FeedItem {
                 title,
                 url,
                 description,
+                publish_date: entry.updated,
             }
     }
 }

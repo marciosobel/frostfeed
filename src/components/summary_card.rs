@@ -1,7 +1,7 @@
-use crate::api::{Feed, FeedItem};
+use crate::api::FeedItem;
 use iced::{
     font::Weight,
-    widget::{button, column, container, text},
+    widget::{button, column, container, row, space, text},
     Element, Font, Length,
 };
 
@@ -12,18 +12,29 @@ pub struct SummaryCard<'a, Message> {
     selected: bool,
 }
 
-pub fn summary_card<'a, Message>(feed: &'a Feed, item: &'a FeedItem) -> SummaryCard<'a, Message>
+pub fn summary_card<'a, Message>(title: String, item: &'a FeedItem) -> SummaryCard<'a, Message>
 where
     Message: Clone + 'a,
 {
-    let header = text(&feed.title)
-        .width(Length::Fill)
-        .wrapping(text::Wrapping::Word)
-        .size(14)
-        .font(Font {
-            weight: Weight::Bold,
-            ..Font::DEFAULT
-        });
+    let mut header = row![
+        text(title)
+            .width(Length::Fill)
+            .wrapping(text::Wrapping::Word)
+            .size(14)
+            .font(Font {
+                weight: Weight::Bold,
+                ..Font::DEFAULT
+            }),
+        space::horizontal(),
+    ];
+
+    let updated = if let Some(date) = item.publish_date {
+        date.format("%d/%m/%Y").to_string()
+    } else {
+        "Unknown date".to_string()
+    };
+
+    header = header.push(text(updated));
 
     let element = column![header, text(&item.title).size(16)]
         .spacing(10)

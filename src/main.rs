@@ -7,13 +7,15 @@ use std::collections::HashMap;
 use api::Feed;
 use iced::{
     widget::{center, text},
-    Element, Task,
+    Element, Task, Theme,
 };
 
 mod screens;
-use screens::{empty_view, feed};
 
-use crate::action::Action;
+use crate::{
+    action::Action,
+    screens::{empty_view, feed, settings},
+};
 
 fn main() -> iced::Result {
     iced::application(FrostFeed::new, FrostFeed::update, FrostFeed::view)
@@ -25,21 +27,23 @@ fn main() -> iced::Result {
 }
 
 struct FrostFeed {
-    theme: iced::Theme,
-    feeds: HashMap<String, Feed>,
+    settings: Settings,
     screen: Screen,
     loading: bool,
 }
 
+#[derive(Debug, Clone)]
 enum Screen {
     EmptyView(empty_view::State),
     Feed(feed::State),
+    Settings(settings::State),
 }
 
 #[derive(Debug, Clone)]
 enum Instruction {
     EmptyView(empty_view::Instruction),
     Feed(feed::Instruction),
+    Settings(settings::Instruction),
 }
 
 #[derive(Debug, Clone)]
@@ -47,16 +51,17 @@ enum Message {
     // Screens
     EmptyView(empty_view::Message),
     Feed(feed::Message),
+    Settings(settings::Message),
 
     FeedAdded(Feed),
+    ChangeScreen(Screen),
 }
 
 impl FrostFeed {
     fn new() -> (Self, Task<Message>) {
         (
             Self {
-                theme: iced::Theme::CatppuccinMocha,
-                feeds: HashMap::new(),
+                settings: Settings::new(),
                 screen: Screen::EmptyView(empty_view::new()),
                 loading: false,
             },
@@ -65,7 +70,7 @@ impl FrostFeed {
     }
 
     fn theme(&self) -> iced::Theme {
-        self.theme.clone()
+        self.settings.theme.clone()
     }
 
     fn update(&mut self, message: Message) -> Task<Message> {
@@ -92,11 +97,26 @@ impl FrostFeed {
                     .map_instruction(Instruction::Feed);
                 return self.handle_action(action);
             }
-            Message::FeedAdded(feed) => {
-                self.feeds.insert(feed.url.clone(), feed);
-                self.loading = false;
-                self.screen = Screen::Feed(feed::new());
+            Message::Settings(message) => {
+                let Screen::Settings(screen) = &mut self.screen else {
+                    return Task::none();
+                };
+
+                let action = screen
+                    .update(&mut self.settings, message)
+                    .map(Message::Settings)
+                    .map_instruction(Instruction::Settings);
+                return self.handle_action(action);
             }
+            Message::FeedAdded(feed) => {
+                println!("Feed added: {}", feed.title);
+                self.settings.feeds.insert(feed.url.clone(), feed);
+                self.loading = false;
+                if let Screen::EmptyView(_) = self.screen {
+                    return Task::done(Message::ChangeScreen(Screen::Feed(feed::new())));
+                }
+            }
+            Message::ChangeScreen(screen) => self.screen = screen,
         }
 
         Task::none()
@@ -109,7 +129,10 @@ impl FrostFeed {
 
         match &self.screen {
             Screen::EmptyView(state) => state.view().map(Message::EmptyView),
-            Screen::Feed(state) => state.view(self.theme(), &self.feeds).map(Message::Feed),
+            Screen::Feed(state) => state
+                .view(self.theme(), &self.settings.feeds)
+                .map(Message::Feed),
+            Screen::Settings(state) => state.view(&self.settings).map(Message::Settings),
         }
     }
 
@@ -130,6 +153,39 @@ impl FrostFeed {
                     return Task::perform(api::Feed::from_url(url), Message::FeedAdded);
                 }
             },
+            Instruction::Feed(instruction) => match instruction {
+                feed::Instruction::OpenSettings => {
+                    Task::done(Message::ChangeScreen(Screen::Settings(settings::new())))
+                }
+            },
+            Instruction::Settings(instruction) => match instruction {
+                settings::Instruction::AddFeed(url) => {
+                    Task::perform(api::Feed::from_url(url), Message::FeedAdded)
+                }
+                settings::Instruction::GoBack => {
+                    let screen = if self.settings.feeds.is_empty() {
+                        Screen::EmptyView(empty_view::new())
+                    } else {
+                        Screen::Feed(feed::new())
+                    };
+
+                    Task::done(Message::ChangeScreen(screen))
+                }
+            },
+        }
+    }
+}
+
+struct Settings {
+    feeds: HashMap<String, Feed>,
+    theme: Theme,
+}
+
+impl Settings {
+    pub fn new() -> Self {
+        Self {
+            theme: Theme::CatppuccinMocha,
+            feeds: HashMap::new(),
         }
     }
 }

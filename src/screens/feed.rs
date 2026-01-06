@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{cmp::Ordering, collections::HashMap};
 
 use iced::{
     font::{self, Weight},
@@ -9,9 +9,7 @@ use iced::{
     },
     Alignment, Element, Font, Function, Length, Task,
 };
-use lucide_icons::iced::{
-    icon_panel_left_close, icon_panel_left_open, icon_search, icon_settings_2,
-};
+use lucide_icons::iced::{icon_panel_left_close, icon_panel_left_open, icon_settings_2};
 
 use crate::{
     action::Action,
@@ -19,17 +17,20 @@ use crate::{
     components,
 };
 
+#[derive(Debug, Clone)]
 pub struct State {
     focused_item: Option<FocusedItem>,
     show_sidebar: bool,
     search: String,
 }
 
+#[derive(Debug, Clone)]
 enum Image {
     Ready(image::Handle),
     Loading,
 }
 
+#[derive(Debug, Clone)]
 struct FocusedItem {
     inner: FeedItem,
     images: HashMap<markdown::Uri, Image>,
@@ -50,7 +51,9 @@ pub enum Message {
 }
 
 #[derive(Debug, Clone)]
-pub enum Instruction {}
+pub enum Instruction {
+    OpenSettings,
+}
 
 pub fn new() -> State {
     State::default()
@@ -150,7 +153,7 @@ impl State {
             }
             Message::SearchChanged(text) => self.search = text,
             Message::Search => todo!(),
-            Message::OpenSettings => todo!(),
+            Message::OpenSettings => return Action::instruction(Instruction::OpenSettings),
         }
 
         Action::none()
@@ -159,18 +162,18 @@ impl State {
     fn sidebar<'a>(&'a self, feeds: &'a HashMap<String, Feed>) -> Element<'a, Message> {
         let mut cards = column![].spacing(10);
 
-        for feed in feeds.values() {
-            for item in &feed.items {
-                let selected = if let Some(focused) = &self.focused_item {
-                    focused.inner.url == item.url
-                } else {
-                    false
-                };
-                let card = components::summary_card(feed, item)
-                    .on_press(Message::FocusItem)
-                    .selected(selected);
-                cards = cards.push(card);
-            }
+        let sorted = SortedFeedWrapper::with_feed(feeds).sort();
+
+        for feed in sorted.0 {
+            let selected = if let Some(focused) = &self.focused_item {
+                focused.inner.url == feed.inner.url
+            } else {
+                false
+            };
+            let card = components::summary_card(feed.title.clone(), feed.inner)
+                .on_press(Message::FocusItem)
+                .selected(selected);
+            cards = cards.push(card);
         }
 
         scrollable(column![cards].spacing(10))
@@ -271,5 +274,49 @@ impl<'a> markdown::Viewer<'a, Message> for FocusedItem {
                 .on_show(|_| Message::ImageShown(url.clone()))
                 .into()
         }
+    }
+}
+
+struct FeedWrapper<'a> {
+    title: String,
+    inner: &'a FeedItem,
+}
+
+impl<'a> FeedWrapper<'a> {
+    fn new(title: String, item: &'a FeedItem) -> Self {
+        Self { title, inner: item }
+    }
+}
+
+struct SortedFeedWrapper<'a>(Vec<FeedWrapper<'a>>);
+
+impl<'a> SortedFeedWrapper<'a> {
+    fn new() -> Self {
+        Self(vec![])
+    }
+
+    fn with_feed(feeds: &'a HashMap<String, Feed>) -> Self {
+        let mut wrapper = Self::new();
+
+        for feed in feeds.values() {
+            for item in &feed.items {
+                wrapper.0.push(FeedWrapper::new(feed.title.clone(), item));
+            }
+        }
+
+        wrapper
+    }
+
+    fn sort(mut self) -> Self {
+        self.0
+            .sort_by(|a, b| match (a.inner.publish_date, b.inner.publish_date) {
+                (Some(a), Some(b)) => b.cmp(&a),
+
+                (Some(_), _) => Ordering::Greater,
+                (_, Some(_)) => Ordering::Less,
+                (None, None) => Ordering::Equal,
+            });
+
+        self
     }
 }

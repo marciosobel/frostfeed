@@ -6,6 +6,7 @@ use lucide_icons::iced::icon_plus;
 
 use crate::action::Action;
 
+#[derive(Debug, Clone)]
 pub struct State {
     feed_url: String,
 }

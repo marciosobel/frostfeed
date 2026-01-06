@@ -1387,6 +1387,7 @@ dependencies = [
 name = "frostfeed"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "feed-rs",
  "html-to-markdown-rs",
  "iced",
