@@ -268,7 +268,7 @@ impl<'a> markdown::Viewer<'a, Message> for FocusedItem {
         if let Some(Image::Ready(handle)) = &self.images.get(url) {
             center_x(container(image(handle)).max_width(600.0)).into()
         } else {
-            sensor(text("Loading"))
+            sensor(center_x(text("Loading")))
                 .key_ref(url.as_str())
                 .delay(milliseconds(500))
                 .on_show(|_| Message::ImageShown(url.clone()))

@@ -114,6 +114,7 @@ impl State {
                         .style(button::danger),
                     text!("{} ({})", feed.title, feed.url),
                 ]
+                .align_y(Alignment::Center)
                 .spacing(10);
                 add_feed = add_feed.push(feed_text);
             }
